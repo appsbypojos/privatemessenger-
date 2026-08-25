@@ -17,8 +17,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-      - run: gradle assembleRelease --no-daemon
+      - name: Build debug APK
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: private-messenger-release-apk
-          path: app/build/outputs/apk/release/app-release.apk
+          name: private-messenger-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
