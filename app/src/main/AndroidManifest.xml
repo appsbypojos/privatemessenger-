@@ -1,6 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
-    <application android:theme="@style/Theme.PrivateMessenger" android:label="Private Messenger" android:allowBackup="false" android:supportsRtl="true">
+    <application
+        android:theme="@style/Theme.PrivateMessenger"
+        android:label="Nexo"
+        android:icon="@drawable/ic_nexo"
+        android:roundIcon="@drawable/ic_nexo"
+        android:allowBackup="false"
+        android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
