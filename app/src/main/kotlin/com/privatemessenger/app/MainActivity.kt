@@ -1,52 +1,44 @@
 package com.privatemessenger.app
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
+    private lateinit var messages: LinearLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MessengerApp() }
+        showLogin()
     }
-}
 
-@Composable
-private fun MessengerApp() {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var loggedIn by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf("") }
-    val messages = remember { mutableStateListOf<String>() }
-    val scope = rememberCoroutineScope()
+    private fun showLogin() {
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(48, 48, 48, 48) }
+        val title = TextView(this).apply { text = "Private Messenger"; textSize = 28f }
+        val email = EditText(this).apply { hint = "Email" }
+        val password = EditText(this).apply { hint = "Пароль"; inputType = 0x81 }
+        val login = Button(this).apply { text = "Войти" }
+        val register = Button(this).apply { text = "Создать аккаунт" }
+        root.addView(title); root.addView(email); root.addView(password); root.addView(login); root.addView(register)
+        setContentView(root)
+        login.setOnClickListener { showChat(email.text.toString()) }
+        register.setOnClickListener { showChat(email.text.toString()) }
+    }
 
-    MaterialTheme {
-        Surface(Modifier.fillMaxSize()) {
-            if (!loggedIn) {
-                Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Private Messenger", style = MaterialTheme.typography.headlineMedium)
-                    OutlinedTextField(email, { email = it }, label = { Text("Email") })
-                    OutlinedTextField(password, { password = it }, label = { Text("Пароль") })
-                    Button(onClick = { loggedIn = true }, enabled = email.isNotBlank() && password.isNotBlank()) { Text("Войти") }
-                }
-            } else {
-                Column(Modifier.fillMaxSize().padding(12.dp)) {
-                    Text("Чат", style = MaterialTheme.typography.headlineSmall)
-                    LazyColumn(Modifier.weight(1f)) { items(messages) { Text(it, Modifier.padding(8.dp)) } }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(message, { message = it }, Modifier.weight(1f), placeholder = { Text("Сообщение") })
-                        Button(onClick = { if (message.isNotBlank()) { messages.add(message); message = "" } }) { Text("Отправить") }
-                    }
-                }
-            }
+    private fun showChat(email: String) {
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(24, 24, 24, 24) }
+        val title = TextView(this).apply { text = "Private Messenger"; textSize = 22f }
+        messages = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val scroll = ScrollView(this).apply { addView(messages) }
+        val row = LinearLayout(this)
+        val input = EditText(this).apply { hint = "Сообщение" }
+        val send = Button(this).apply { text = "Отправить" }
+        row.addView(input, LinearLayout.LayoutParams(0, -2, 1f)); row.addView(send)
+        root.addView(title); root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f)); root.addView(row)
+        setContentView(root)
+        send.setOnClickListener {
+            val value = input.text.toString().trim()
+            if (value.isNotEmpty()) { messages.addView(TextView(this).apply { text = value; textSize = 17f; setPadding(8, 12, 8, 12) }); input.text.clear() }
         }
     }
 }
