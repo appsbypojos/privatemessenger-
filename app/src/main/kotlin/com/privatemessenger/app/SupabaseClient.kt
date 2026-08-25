@@ -69,8 +69,6 @@ object SupabaseClient {
         }
         require(password.length >= 6) { "Пароль должен содержать минимум 6 символов" }
 
-        // Nexo uses a synthetic email internally so the user only needs a unique nickname.
-        // Registration goes directly through Supabase Auth; there is no /functions/v1 endpoint.
         val json = request(
             "POST",
             "/auth/v1/signup",
@@ -88,8 +86,6 @@ object SupabaseClient {
             accessToken = session.getString("access_token")
             userId = o.getJSONObject("user").getString("id")
         } else {
-            // If email confirmation is enabled, Auth may return no session.
-            // The app will surface the actual Supabase response instead of a fake 404.
             throw IOException("Supabase: регистрация создана, но сессия не выдана. Отключите Confirm email в Auth → Providers → Email.")
         }
     }
@@ -117,7 +113,7 @@ object SupabaseClient {
         request(
             "POST",
             "/rest/v1/rpc/search_profiles",
-            JSONObject().put("search_username", query.trim().lowercase()).toString()
+            JSONObject().put("search_term", query.trim().lowercase()).toString()
         )
     )
 
