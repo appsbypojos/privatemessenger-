@@ -10,82 +10,130 @@ import java.io.IOException
 
 object SupabaseClient {
     private val http = OkHttpClient()
-    private val base get() = BuildConfig.SUPABASE_URL.trimEnd('/')
-    private val key get() = BuildConfig.SUPABASE_KEY
+
+    // Accept a normal project URL even if someone accidentally pasted /rest/v1 or /auth/v1.
+    private val base: String
+        get() = BuildConfig.SUPABASE_URL.trim().trimEnd('/')
+            .removeSuffix("/rest/v1")
+            .removeSuffix("/auth/v1")
+            .trimEnd('/')
+
+    private val key get() = BuildConfig.SUPABASE_KEY.trim()
+
     var accessToken: String? = null
         private set
     var userId: String? = null
         private set
 
     private fun request(method: String, path: String, body: String? = null, prefer: String? = null): String {
-        if (base.isBlank() || key.isBlank()) error("Supabase не настроен")
+        if (base.isBlank()) error("SUPABASE_URL не настроен")
+        if (key.isBlank()) error("SUPABASE_KEY не настроен")
+
+        val url = base + if (path.startsWith('/')) path else "/$path"
         val builder = Request.Builder()
-            .url(base + path)
+            .url(url)
             .header("apikey", key)
             .header("Authorization", "Bearer ${accessToken ?: key}")
+
         if (prefer != null) builder.header("Prefer", prefer)
-        if (body != null) builder.header("Content-Type", "application/json")
+        if (body != null) builder.header("Content-Type", "application/json; charset=utf-8")
+
         val requestBody = body?.toRequestBody("application/json; charset=utf-8".toMediaType())
         when (method) {
             "GET" -> builder.get()
-            "POST" -> builder.post(requestBody ?: "{}".toRequestBody("application/json".toMediaType()))
-            "PATCH" -> builder.patch(requestBody ?: "{}".toRequestBody("application/json".toMediaType()))
+            "POST" -> builder.post(requestBody ?: "{}".toRequestBody("application/json; charset=utf-8".toMediaType()))
+            "PATCH" -> builder.patch(requestBody ?: "{}".toRequestBody("application/json; charset=utf-8".toMediaType()))
             "DELETE" -> builder.delete(requestBody)
+            else -> error("Unsupported HTTP method")
         }
+
         http.newCall(builder.build()).execute().use { response ->
             val text = response.body?.string().orEmpty()
-            if (!response.isSuccessful) throw IOException("Supabase ${response.code}: $text")
+            if (!response.isSuccessful) {
+                val message = try {
+                    val json = JSONObject(text)
+                    json.optString("msg").ifBlank {
+                        json.optString("message").ifBlank {
+                            json.optString("error_description").ifBlank { text }
+                        }
+                    }
+                } catch (_: Exception) { text }
+                throw IOException("Supabase ${response.code}: $message")
+            }
             return text
         }
     }
 
     fun signIn(email: String, password: String) {
-        val json = request("POST", "/auth/v1/token?grant_type=password",
-            JSONObject().put("email", email).put("password", password).toString())
+        val json = request(
+            "POST",
+            "/auth/v1/token?grant_type=password",
+            JSONObject().put("email", email).put("password", password).toString()
+        )
         val o = JSONObject(json)
         accessToken = o.getString("access_token")
         userId = o.getJSONObject("user").getString("id")
     }
 
     fun signUp(email: String, password: String) {
-        val json = request("POST", "/auth/v1/signup",
-            JSONObject().put("email", email).put("password", password).toString())
+        val json = request(
+            "POST",
+            "/auth/v1/signup",
+            JSONObject().put("email", email).put("password", password).toString()
+        )
         val o = JSONObject(json)
-        if (o.has("access_token") && o.optString("access_token").isNotBlank()) {
-            accessToken = o.getString("access_token")
+        val token = o.optString("access_token")
+        if (token.isNotBlank() && o.has("user")) {
+            accessToken = token
             userId = o.getJSONObject("user").getString("id")
         }
     }
 
     fun signOut() {
-        try { if (accessToken != null) request("POST", "/auth/v1/logout") } finally {
+        try {
+            if (accessToken != null) request("POST", "/auth/v1/logout")
+        } finally {
             accessToken = null
             userId = null
         }
     }
 
     fun profiles(): JSONArray {
-        val uid = userId ?: error("not authenticated")
-        return JSONArray(request("GET", "/rest/v1/profiles?id=neq.$uid&select=id,username,display_name&order=display_name.asc&limit=100"))
+        val uid = userId ?: error("Не выполнен вход")
+        return JSONArray(
+            request(
+                "GET",
+                "/rest/v1/profiles?id=neq.$uid&select=id,username,display_name&order=display_name.asc&limit=100"
+            )
+        )
     }
 
     fun directConversation(otherUserId: String): String {
-        val json = request("POST", "/rest/v1/rpc/create_direct_conversation",
-            JSONObject().put("other_user", otherUserId).toString())
+        val json = request(
+            "POST",
+            "/rest/v1/rpc/create_direct_conversation",
+            JSONObject().put("other_user", otherUserId).toString()
+        )
         return json.trim().trim('"')
     }
 
     fun messages(conversationId: String): JSONArray = JSONArray(
-        request("GET", "/rest/v1/messages?conversation_id=eq.$conversationId&select=id,sender_id,body,ciphertext,created_at&order=created_at.asc&limit=500")
+        request(
+            "GET",
+            "/rest/v1/messages?conversation_id=eq.$conversationId&select=id,sender_id,body,created_at&order=created_at.asc&limit=500"
+        )
     )
 
     fun send(conversationId: String, text: String) {
-        val uid = userId ?: error("not authenticated")
-        request("POST", "/rest/v1/messages",
-            JSONObject().put("conversation_id", conversationId)
+        val uid = userId ?: error("Не выполнен вход")
+        request(
+            "POST",
+            "/rest/v1/messages",
+            JSONObject()
+                .put("conversation_id", conversationId)
                 .put("sender_id", uid)
                 .put("body", text)
-                .put("ciphertext", text)
-                .put("nonce", "none").toString())
+                .toString()
+        )
     }
 }
