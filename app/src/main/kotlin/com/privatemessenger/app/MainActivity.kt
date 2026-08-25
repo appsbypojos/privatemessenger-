@@ -1,7 +1,6 @@
 package com.privatemessenger.app
 
 import android.os.Bundle
-import android.text.InputType
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.*
@@ -31,7 +30,7 @@ class MainActivity : AppCompatActivity() {
     private fun auth(email:String, password:String, signup:Boolean) {
         if (BuildConfig.SUPABASE_URL.isBlank() || BuildConfig.SUPABASE_KEY.isBlank()) { toast("Настройте SUPABASE_URL и SUPABASE_KEY"); return }
         if (email.isBlank() || password.length < 6) { toast("Введите email и пароль (минимум 6 символов)"); return }
-        lifecycleScope.launch {
+        scope.launch {
             try {
                 withContext(Dispatchers.IO) { if (signup) SupabaseClient.signUp(email,password) else SupabaseClient.signIn(email,password) }
                 if (signup) toast("Аккаунт создан. Если включено подтверждение email, подтвердите адрес и войдите.") else openChat()
