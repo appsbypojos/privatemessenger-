@@ -63,16 +63,44 @@ object SupabaseClient {
     }
 
     fun register(username: String, password: String) {
-        val body = JSONObject().put("username", username).put("password", password).toString()
-        request("POST", "/functions/v1/register-nexo-user", body, auth = false)
-        signIn(username, password)
+        val normalized = username.trim().lowercase()
+        require(normalized.matches(Regex("[a-z0-9_]{3,24}"))) {
+            "Ник: 3–24 символа, только a-z, 0-9 и _"
+        }
+        require(password.length >= 6) { "Пароль должен содержать минимум 6 символов" }
+
+        // Nexo uses a synthetic email internally so the user only needs a unique nickname.
+        // Registration goes directly through Supabase Auth; there is no /functions/v1 endpoint.
+        val json = request(
+            "POST",
+            "/auth/v1/signup",
+            JSONObject()
+                .put("email", emailFor(normalized))
+                .put("password", password)
+                .put("data", JSONObject().put("username", normalized).put("display_name", normalized))
+                .toString(),
+            auth = false
+        )
+
+        val o = JSONObject(json)
+        val session = o.optJSONObject("session")
+        if (session != null && session.has("access_token")) {
+            accessToken = session.getString("access_token")
+            userId = o.getJSONObject("user").getString("id")
+        } else {
+            // If email confirmation is enabled, Auth may return no session.
+            // The app will surface the actual Supabase response instead of a fake 404.
+            throw IOException("Supabase: регистрация создана, но сессия не выдана. Отключите Confirm email в Auth → Providers → Email.")
+        }
     }
 
     fun signIn(username: String, password: String) {
+        val normalized = username.trim().lowercase()
+        require(normalized.matches(Regex("[a-z0-9_]{3,24}"))) { "Некорректный ник" }
         val json = request(
             "POST",
             "/auth/v1/token?grant_type=password",
-            JSONObject().put("email", emailFor(username)).put("password", password).toString(),
+            JSONObject().put("email", emailFor(normalized)).put("password", password).toString(),
             auth = false
         )
         val o = JSONObject(json)
@@ -89,7 +117,7 @@ object SupabaseClient {
         request(
             "POST",
             "/rest/v1/rpc/search_profiles",
-            JSONObject().put("search_username", query).toString()
+            JSONObject().put("search_username", query.trim().lowercase()).toString()
         )
     )
 
