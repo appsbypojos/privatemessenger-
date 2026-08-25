@@ -19,12 +19,14 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('app/src/main/kotlin/com/privatemessenger/app/MainActivity.kt')
-          s = p.read_text()
+          p = Path('app/src/main/kotlin/com/privatemessenger/app/NexoActivity.kt')
+          if not p.exists():
+              raise SystemExit('NexoActivity.kt not found')
+          s = p.read_text(encoding='utf-8')
           old = 'ScrollView.LayoutParams(-1, -2)'
           new = 'android.widget.FrameLayout.LayoutParams(-1, -2)'
           if old in s:
-              p.write_text(s.replace(old, new))
+              p.write_text(s.replace(old, new), encoding='utf-8')
           PY
 
       - name: Commit fix
@@ -35,6 +37,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app/src/main/kotlin/com/privatemessenger/app/MainActivity.kt
+          git add app/src/main/kotlin/com/privatemessenger/app/NexoActivity.kt
           git commit -m "fix: use valid FrameLayout params for chat messages"
           git push
