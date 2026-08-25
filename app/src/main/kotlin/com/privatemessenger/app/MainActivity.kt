@@ -492,7 +492,7 @@ class MainActivity : AppCompatActivity() {
             setPadding(dp(12), dp(12), dp(12), dp(12))
         }
         messageScroll = ScrollView(this).apply {
-            addView(messageList, ScrollView.LayoutParams(-1, -2))
+            addView(messageList, android.widget.FrameLayout.LayoutParams(-1, -2))
             setBackgroundColor(bg)
             isFillViewport = true
         }
