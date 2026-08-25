@@ -1,0 +1,27 @@
+{
+  "name": "private-messenger",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "web": "expo start --web",
+    "lint": "expo lint",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "expo": "~53.0.0",
+    "expo-crypto": "~14.1.0",
+    "expo-router": "~5.1.0",
+    "expo-secure-store": "~14.2.0",
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-url-polyfill": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.0.0",
+    "typescript": "~5.8.3"
+  }
+}

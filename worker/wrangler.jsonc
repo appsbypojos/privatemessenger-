@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "private-messenger-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "vars": {
+    "SUPABASE_URL": "https://YOUR_PROJECT.supabase.co"
+  },
+  "env": {
+    "production": {
+      "name": "private-messenger-api-production"
+    }
+  }
+}
