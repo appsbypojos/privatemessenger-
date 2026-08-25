@@ -50,8 +50,8 @@ class MainActivity : AppCompatActivity() {
         root.addView(logo, LinearLayout.LayoutParams(76.dp(), 76.dp()).apply { bottomMargin = 18.dp() })
         root.addView(TextView(this).apply { text = "nexo"; textSize = 34f; typeface = Typeface.DEFAULT_BOLD; gravity = Gravity.CENTER }, lp(0, 4.dp()))
         root.addView(TextView(this).apply { text = "Общайтесь по уникальному нику"; textSize = 16f; gravity = Gravity.CENTER; setTextColor(Color.DKGRAY) }, lp(0, 28.dp()))
-        val username = EditText(this).apply { hint = "Уникальный ник"; singleLine = true; inputType = InputType.TYPE_CLASS_TEXT }
-        val password = EditText(this).apply { hint = "Пароль"; singleLine = true; inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD }
+        val username = EditText(this).apply { hint = "Уникальный ник"; setSingleLine(true); inputType = InputType.TYPE_CLASS_TEXT }
+        val password = EditText(this).apply { hint = "Пароль"; setSingleLine(true); inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD }
         root.addView(username, fieldLp()); root.addView(password, fieldLp())
         val login = Button(this).apply { text = "Войти"; isAllCaps = false }; val register = Button(this).apply { text = "Создать аккаунт"; isAllCaps = false }
         root.addView(login, buttonLp()); root.addView(register, buttonLp())
@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
         val header = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
         header.addView(TextView(this).apply { text = "nexo"; textSize = 28f; typeface = Typeface.DEFAULT_BOLD }, LinearLayout.LayoutParams(0, 52.dp(), 1f))
         val logout = Button(this).apply { text = "Выйти"; isAllCaps = false }; header.addView(logout, LinearLayout.LayoutParams(-2, 52.dp())); root.addView(header)
-        val search = EditText(this).apply { hint = "Поиск по нику"; singleLine = true; inputType = InputType.TYPE_CLASS_TEXT; setPadding(16.dp(), 0, 16.dp(), 0) }
+        val search = EditText(this).apply { hint = "Поиск по нику"; setSingleLine(true); inputType = InputType.TYPE_CLASS_TEXT; setPadding(16.dp(), 0, 16.dp(), 0) }
         root.addView(search, LinearLayout.LayoutParams(-1, 54.dp()).apply { topMargin = 8.dp(); bottomMargin = 10.dp() })
         val results = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(0, 4.dp(), 0, 4.dp()) }
         root.addView(ScrollView(this).apply { addView(results) }, LinearLayout.LayoutParams(-1, 0, 1f)); setContentView(root); applyInsets(root)
