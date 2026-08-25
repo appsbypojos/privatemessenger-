@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Private Messenger",
+    "slug": "private-messenger",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "com.appsbypojos.privatemessenger",
+      "permissions": ["INTERNET"]
+    },
+    "plugins": ["expo-secure-store"]
+  }
+}
