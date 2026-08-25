@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#111111" android:pathData="M54,4A50,50 0,1 0,54 104A50,50 0,1 0,54 4"/>
-    <path android:fillColor="#FFFFFF" android:pathData="M31,30h12l23,30V30h11v48H66L42,48v30H31z"/>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Nexo logo: speech bubble with stylized N -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,3A51,51 0,1 0,54 105A51,51 0,1 0,54 3" />
+
+    <path
+        android:fillColor="#246BFF"
+        android:pathData="M54,9A45,45 0,0 1,95 35A45,45 0,0 1,72 91A45,45 0,0 1,48 98L31,102A5,5 0,0 1,25 96L28,78A45,45 0,0 1,9 54A45,45 0,0 1,54 9M54,15A39,39 0,0 0,15 54A39,39 0,0 0,34 86L31,95L48,91A39,39 0,0 0,54 93A39,39 0,0 0,93 54A39,39 0,0 0,54 15Z" />
+
+    <path
+        android:fillColor="#5A35E8"
+        android:pathData="M43,37C40,37 38,39 38,42V66C38,69 40,71 43,71C46,71 48,69 48,66V52L65,69C67,71 70,71 72,69C74,67 74,64 72,62L55,45H66C69,45 71,43 71,40C71,38 69,37 66,37H43Z" />
 </vector>
