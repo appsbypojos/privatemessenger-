@@ -3,6 +3,8 @@ node_modules/
 dist/
 .env
 .env.*
+local.properties
+.gradle/
 *.keystore
 *.jks
 .DS_Store
