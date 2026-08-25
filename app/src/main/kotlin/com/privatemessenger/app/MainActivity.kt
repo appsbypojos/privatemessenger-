@@ -21,7 +21,6 @@ class MainActivity : AppCompatActivity() {
     private var searchJob: Job? = null
     private var chatPoll: Job? = null
     private var selectedTab = 1
-    private var conversationId: String? = null
     private var lastCount = -1
     private lateinit var messageList: LinearLayout
     private lateinit var messageScroll: ScrollView
@@ -65,25 +64,23 @@ class MainActivity : AppCompatActivity() {
         scope.launch{try{withContext(Dispatchers.IO){if(reg)SupabaseClient.register(n,p)else SupabaseClient.signIn(n,p)};showHome(1)}catch(e:Exception){toast(e.message?:"Ошибка авторизации")}}
     }
 
-    private fun showHome(tab:Int){selectedTab=tab;conversationId=null;chatPoll?.cancel();when(tab){0->showSearch();1->showChats();2->showSettings();else->showProfile()}}
-
-    private fun shell(title:String,content:View):LinearLayout{
+    private fun showHome(tab:Int){selectedTab=tab;chatPoll?.cancel();when(tab){0->showSearch();1->showChats();2->showSettings();else->showProfile()}}
+    private fun shell(title:String,content:View){
         val r=root();val bar=LinearLayout(this).apply{gravity=Gravity.CENTER_VERTICAL;setPadding(dp(18),dp(6),dp(18),dp(4))}
         bar.addView(TextView(this).apply{text=title;textSize=27f;typeface=Typeface.DEFAULT_BOLD},lp(0,dp(54)).apply{weight=1f});r.addView(bar)
-        r.addView(content,lp( -1,0).apply{weight=1f});r.addView(bottomNav());setContentView(r);applyInsets(r);return r
+        r.addView(content,lp(-1,0).apply{weight=1f});r.addView(bottomNav());setContentView(r);applyInsets(r)
     }
     private fun bottomNav():View{
         val nav=LinearLayout(this).apply{gravity=Gravity.CENTER;setBackgroundColor(Color.WHITE);setPadding(0,dp(4),0,dp(4))}
         val items=listOf("⌕\nПоиск","▣\nЧаты","⚙\nНастройки","●\nПрофиль")
-        items.forEachIndexed{i,label->val b=TextView(this).apply{text=label;textSize=12f;gravity=Gravity.CENTER;setTextColor(if(i==selectedTab)Color.rgb(65,92,220)Color.DKGRAY);setTypeface(null,if(i==selectedTab)Typeface.BOLD else Typeface.NORMAL);setPadding(0,dp(4),0,dp(4));isClickable=true};nav.addView(b,lp(0,dp(60)).apply{weight=1f});b.setOnClickListener{showHome(i)}}
+        items.forEachIndexed{i,label->val b=TextView(this).apply{text=label;textSize=12f;gravity=Gravity.CENTER;setTextColor(if(i==selectedTab) Color.rgb(65,92,220) else Color.DKGRAY);setTypeface(null,if(i==selectedTab)Typeface.BOLD else Typeface.NORMAL);setPadding(0,dp(4),0,dp(4));isClickable=true};nav.addView(b,lp(0,dp(60)).apply{weight=1f});b.setOnClickListener{showHome(i)}}
         return nav
     }
 
     private fun showSearch(){
         val content=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(dp(16),dp(4),dp(16),dp(8))}
         val search=EditText(this).apply{hint="Поиск пользователей по нику";setSingleLine(true);inputType=InputType.TYPE_CLASS_TEXT;setPadding(dp(16),0,dp(16),0)};content.addView(search,lp().apply{height=dp(54);bottomMargin=dp(8)})
-        val list=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL};content.addView(ScrollView(this).apply{addView(list)},lp().apply{weight=1f})
-        shell("Поиск",content)
+        val list=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL};content.addView(ScrollView(this).apply{addView(list)},lp().apply{weight=1f});shell("Поиск",content)
         fun render(a:JSONArray){list.removeAllViews();if(a.length()==0){list.addView(TextView(this).apply{text=if(search.text.isNullOrBlank())"Введите ник для поиска"else"Пользователь не найден";textSize=16f;setTextColor(Color.GRAY);setPadding(dp(8),dp(24),dp(8),dp(24))});return};for(i in 0 until a.length()){val o=a.getJSONObject(i);val id=o.getString("id");val n=o.optString("username");val d=o.optString("display_name").ifBlank{n};val row=TextView(this).apply{text="$d\n@$n";textSize=16f;setTextColor(Color.DKGRAY);setPadding(dp(16),dp(12),dp(16),dp(12));setBackgroundColor(Color.WHITE)};list.addView(row,lp().apply{bottomMargin=dp(6)});row.setOnClickListener{openChat(id,n)}}}
         search.addTextChangedListener(object:TextWatcher{override fun beforeTextChanged(s:CharSequence?,st:Int,c:Int,a:Int){};override fun onTextChanged(s:CharSequence?,st:Int,b:Int,c:Int){searchJob?.cancel();searchJob=scope.launch{delay(220);try{render(withContext(Dispatchers.IO){SupabaseClient.searchProfiles(s?.toString().orEmpty())})}catch(e:Exception){toast(e.message?:"Ошибка поиска")}}};override fun afterTextChanged(e:Editable?) {}})
         scope.launch{try{render(withContext(Dispatchers.IO){SupabaseClient.searchProfiles("")})}catch(e:Exception){toast(e.message?:"Ошибка")}}
@@ -91,14 +88,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun showChats(){
         val content=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(dp(12),dp(4),dp(12),dp(8))};val list=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL};content.addView(ScrollView(this).apply{addView(list)},lp().apply{weight=1f});shell("Чаты",content)
-        fun load(){scope.launch{try{val a=withContext(Dispatchers.IO){SupabaseClient.chats()};list.removeAllViews();if(a.length()==0){list.addView(TextView(this@MainActivity).apply{text="Здесь появятся ваши чаты";textSize=16f;gravity=Gravity.CENTER;setTextColor(Color.GRAY);setPadding(0,dp(40),0,dp(40))});return@launch};for(i in 0 until a.length()){val o=a.getJSONObject(i);val cid=o.getString("conversation_id");val n=o.optString("other_username");val last=o.optString("last_message").ifBlank{"Нет сообщений"};val row=LinearLayout(this@MainActivity).apply{gravity=Gravity.CENTER_VERTICAL;setPadding(dp(14),dp(10),dp(14),dp(10));setBackgroundColor(Color.WHITE)};row.addView(TextView(this@MainActivity).apply{text="@${n}";textSize=17f;typeface=Typeface.DEFAULT_BOLD},lp(0,dp(58)).apply{weight=1f});row.addView(TextView(this@MainActivity).apply{text=last;textSize=13f;setTextColor(Color.GRAY);maxLines=1},lp(dp(150),dp(58)));list.addView(row,lp().apply{bottomMargin=dp(6)});row.setOnClickListener{openExistingChat(cid,n)}}}catch(e:Exception){toast(e.message?:"Не удалось загрузить чаты")}}};load()
+        scope.launch{try{val a=withContext(Dispatchers.IO){SupabaseClient.chats()};list.removeAllViews();if(a.length()==0){list.addView(TextView(this@MainActivity).apply{text="Здесь появятся ваши чаты";textSize=16f;gravity=Gravity.CENTER;setTextColor(Color.GRAY);setPadding(0,dp(40),0,dp(40))});return@launch};for(i in 0 until a.length()){val o=a.getJSONObject(i);val cid=o.getString("conversation_id");val n=o.optString("other_username");val last=o.optString("last_message").ifBlank{"Нет сообщений"};val row=LinearLayout(this@MainActivity).apply{gravity=Gravity.CENTER_VERTICAL;setPadding(dp(14),dp(10),dp(14),dp(10));setBackgroundColor(Color.WHITE)};row.addView(TextView(this@MainActivity).apply{text="@${n}";textSize=17f;typeface=Typeface.DEFAULT_BOLD},lp(0,dp(58)).apply{weight=1f});row.addView(TextView(this@MainActivity).apply{text=last;textSize=13f;setTextColor(Color.GRAY);maxLines=1},lp(dp(150),dp(58)));list.addView(row,lp().apply{bottomMargin=dp(6)});row.setOnClickListener{openExistingChat(cid,n)}}}catch(e:Exception){toast(e.message?:"Не удалось загрузить чаты")}}
     }
 
     private fun showSettings(){
         val content=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(dp(16),dp(8),dp(16),dp(8))}
-        val notifications=Switch(this).apply{text="Уведомления";textSize=17f;isChecked=true;setPadding(dp(12),dp(8),dp(12),dp(8))};content.addView(notifications,lp().apply{height=dp(60)})
-        val sound=Switch(this).apply{text="Звук сообщений";textSize=17f;isChecked=true;setPadding(dp(12),dp(8),dp(12),dp(8))};content.addView(sound,lp().apply{height=dp(60)})
-        val info=TextView(this).apply{text="Nexo\nВерсия 1.0\n\nПростой и быстрый мессенджер на Supabase.";textSize=16f;setTextColor(Color.GRAY);setPadding(dp(12),dp(24),dp(12),0)};content.addView(info,lp().apply{weight=1f});shell("Настройки",content)
+        content.addView(Switch(this).apply{text="Уведомления";textSize=17f;isChecked=true;setPadding(dp(12),dp(8),dp(12),dp(8))},lp().apply{height=dp(60)})
+        content.addView(Switch(this).apply{text="Звук сообщений";textSize=17f;isChecked=true;setPadding(dp(12),dp(8),dp(12),dp(8))},lp().apply{height=dp(60)})
+        content.addView(TextView(this).apply{text="Nexo\nВерсия 1.0\n\nПростой и быстрый мессенджер на Supabase.";textSize=16f;setTextColor(Color.GRAY);setPadding(dp(12),dp(24),dp(12),0)},lp().apply{weight=1f});shell("Настройки",content)
     }
 
     private fun showProfile(){
@@ -108,15 +105,15 @@ class MainActivity : AppCompatActivity() {
         logout.setOnClickListener{scope.launch{withContext(Dispatchers.IO){SupabaseClient.signOut()};showAuth()}}
     }
 
-    private fun openExistingChat(cid:String,name:String){openChatInternal(cid,name,null)}
-    private fun openChat(otherId:String,name:String){scope.launch{try{val cid=withContext(Dispatchers.IO){SupabaseClient.directConversation(otherId)};openChatInternal(cid,name,otherId)}catch(e:Exception){toast(e.message?:"Не удалось открыть чат")}}}
-    private fun openChatInternal(cid:String,name:String,unused:String?){
-        chatPoll?.cancel();conversationId=cid;lastCount=-1
+    private fun openExistingChat(cid:String,name:String){openChatInternal(cid,name)}
+    private fun openChat(otherId:String,name:String){scope.launch{try{val cid=withContext(Dispatchers.IO){SupabaseClient.directConversation(otherId)};openChatInternal(cid,name)}catch(e:Exception){toast(e.message?:"Не удалось открыть чат")}}}
+    private fun openChatInternal(cid:String,name:String){
+        chatPoll?.cancel();lastCount=-1
         val r=root();val header=LinearLayout(this).apply{gravity=Gravity.CENTER_VERTICAL;setBackgroundColor(Color.WHITE)};val back=Button(this).apply{text="‹";textSize=28f;isAllCaps=false};header.addView(back,lp(dp(56),dp(56)));header.addView(TextView(this).apply{text="@$name";textSize=20f;typeface=Typeface.DEFAULT_BOLD;gravity=Gravity.CENTER_VERTICAL},lp(0,dp(56)).apply{weight=1f});r.addView(header)
         messageList=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(dp(12),dp(12),dp(12),dp(12))};messageScroll=ScrollView(this).apply{addView(messageList)};r.addView(messageScroll,lp().apply{weight=1f})
         val row=LinearLayout(this).apply{gravity=Gravity.BOTTOM;setPadding(dp(8),dp(6),dp(8),dp(6));setBackgroundColor(Color.WHITE)};val input=EditText(this).apply{hint="Сообщение";inputType=InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE;maxLines=4};val send=Button(this).apply{text="➤";isAllCaps=false};row.addView(input,lp(0,-2).apply{weight=1f});row.addView(send,lp(dp(58),dp(54)));r.addView(row);setContentView(r);applyInsets(r)
         back.setOnClickListener{chatPoll?.cancel();showHome(1)};send.setOnClickListener{val text=input.text.toString().trim();if(text.isBlank())return@setOnClickListener;send.isEnabled=false;scope.launch{try{withContext(Dispatchers.IO){SupabaseClient.send(cid,text)};input.text.clear();refresh(cid)}catch(e:Exception){toast(e.message?:"Ошибка отправки")}finally{send.isEnabled=true}}}
         scope.launch{refresh(cid);chatPoll=launch{while(isActive){delay(1200);try{refresh(cid)}catch(_:Exception){}}}}
     }
-    private suspend fun refresh(cid:String){val a=withContext(Dispatchers.IO){SupabaseClient.messages(cid)};if(a.length()==lastCount)return;lastCount=a.length();messageList.removeAllViews();for(i in 0 until a.length()){val o=a.getJSONObject(i);val mine=o.optString("sender_id")==SupabaseClient.userId;val bubble=TextView(this).apply{text=o.optString("body");textSize=16f;setTextColor(Color.BLACK);setPadding(dp(15),dp(10),dp(15),dp(10));setBackgroundColor(if(mine)Color.rgb(220,235,255)Color.WHITE);gravity=if(mine)Gravity.END else Gravity.START};messageList.addView(bubble,lp().apply{topMargin=dp(3);bottomMargin=dp(3);leftMargin=if(mine)dp(55)else 0;rightMargin=if(mine)0 else dp(55)} )};messageScroll.post{messageScroll.fullScroll(View.FOCUS_DOWN)}}
+    private suspend fun refresh(cid:String){val a=withContext(Dispatchers.IO){SupabaseClient.messages(cid)};if(a.length()==lastCount)return;lastCount=a.length();messageList.removeAllViews();for(i in 0 until a.length()){val o=a.getJSONObject(i);val mine=o.optString("sender_id")==SupabaseClient.userId;val bubble=TextView(this).apply{text=o.optString("body");textSize=16f;setTextColor(Color.BLACK);setPadding(dp(15),dp(10),dp(15),dp(10));setBackgroundColor(if(mine) Color.rgb(220,235,255) else Color.WHITE);gravity=if(mine)Gravity.END else Gravity.START};messageList.addView(bubble,lp().apply{topMargin=dp(3);bottomMargin=dp(3);leftMargin=if(mine)dp(55)else 0;rightMargin=if(mine)0 else dp(55)})};messageScroll.post{messageScroll.fullScroll(View.FOCUS_DOWN)}}
 }
