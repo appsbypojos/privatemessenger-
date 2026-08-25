@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
     private fun showAuth() {
         pollingJob?.cancel()
         val root = baseRoot().apply { gravity = Gravity.CENTER_HORIZONTAL; setPadding(28.dp(), 24.dp(), 28.dp(), 20.dp()) }
-        val logo = ImageView(this).apply { setImageResource(R.drawable.nexo_logo); scaleType = ImageView.ScaleType.CENTER_INSIDE }
+        val logo = ImageView(this).apply { setImageResource(R.drawable.ic_nexo); scaleType = ImageView.ScaleType.CENTER_INSIDE }
         root.addView(logo, LinearLayout.LayoutParams(76.dp(), 76.dp()).apply { bottomMargin = 18.dp() })
         root.addView(TextView(this).apply { text = "nexo"; textSize = 34f; typeface = Typeface.DEFAULT_BOLD; gravity = Gravity.CENTER }, lp(0, 4.dp()))
         root.addView(TextView(this).apply { text = "Общайтесь по уникальному нику"; textSize = 16f; gravity = Gravity.CENTER; setTextColor(Color.DKGRAY) }, lp(0, 28.dp()))
