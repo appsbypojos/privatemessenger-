@@ -1,39 +1,94 @@
-# Private Messenger — Native Android
+# Nexo — рецепт вкусных пельменей 🥟
 
-Native Android/Kotlin messenger. **Expo and EAS are not used.**
+Native Android/Kotlin messenger. **Expo и EAS не используются.**
 
-## Stack
+## Стек
+
 - Android + Kotlin + Gradle
 - Supabase Auth + PostgreSQL + RLS
-- Cloudflare Worker for backend/API extensions
-- OkHttp for Supabase REST
+- Cloudflare Worker для backend/API-расширений
+- OkHttp для Supabase REST
 
-## Local Android build
-Create `local.properties` in the repository root:
+## Локальная сборка Android
+
+Создай `local.properties` в корне репозитория:
 
 ```properties
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 SUPABASE_KEY=YOUR_PUBLISHABLE_KEY
 ```
 
-Then build:
+Затем:
 
 ```bash
-gradle assembleDebug
+gradle :app:assembleDebug
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`
+APK будет здесь:
+
+`app/build/outputs/apk/debug/app-debug.apk`
+
+## Сборка в GitHub Actions
+
+Workflow `.github/workflows/android.yml` автоматически запускает debug-сборку при изменении `main` и позволяет запускать её вручную через **Actions → Android APK → Run workflow**.
+
+Для сборки с конфигурацией Supabase в GitHub Secrets должны быть заданы:
+
+- `SUPABASE_URL`
+- `SUPABASE_KEY`
+
+После успешной сборки APK публикуется как artifact `private-messenger-debug-apk`.
 
 ## Supabase
-Apply `supabase/migrations/0001_messenger.sql` to the project. The mobile app uses only the publishable key; never put a service-role key in the APK.
 
-## GitHub Actions
-`.github/workflows/android.yml` builds a debug APK and uploads it as an Actions artifact. It does not require Expo/EAS.
-
-For the workflow to connect to Supabase during compilation, add repository secrets `SUPABASE_URL` and `SUPABASE_KEY` and extend the Gradle step with those environment variables if desired. The current workflow can also build the UI without backend configuration.
+Примени миграцию `supabase/migrations/0001_messenger.sql` к проекту Supabase. В APK должен использоваться только publishable/anon key — **service-role key нельзя помещать в приложение**.
 
 ## Cloudflare
-The Worker in `worker/` is optional for the current REST client and is intended for rate limiting, server-side API extensions, and future push/event services.
 
-## Security
-Transport to Supabase is HTTPS and database access is protected by RLS. This version is **not end-to-end encrypted**: message bodies are currently stored as ciphertext fields but the native client sends the message text. Do not describe this build as E2EE. A production E2EE layer should use an audited protocol such as Signal/Double Ratchet with secure device key storage before claiming E2EE.
+Worker в `worker/` оставлен как дополнительный слой для rate limiting, серверных API-расширений и будущих push/event-сервисов.
+
+## Безопасность
+
+Соединение с Supabase выполняется по HTTPS, а доступ к данным ограничивается RLS. Текущая версия **не является E2EE-мессенджером**: не следует заявлять сквозное шифрование, пока не добавлен и не проверен полноценный протокол E2EE.
+
+---
+
+# А теперь — вкусные домашние пельмени 🥟
+
+## Ингредиенты на 4–5 порций
+
+### Тесто
+- 500 г пшеничной муки
+- 200 мл тёплой воды
+- 1 яйцо
+- 1 ч. л. соли
+- 1 ст. л. растительного масла
+
+### Начинка
+- 300 г свинины
+- 300 г говядины
+- 1 крупная луковица
+- 80–100 мл ледяной воды или бульона
+- 1 ч. л. соли
+- ½ ч. л. чёрного перца
+
+### Для подачи
+- сливочное масло
+- сметана
+- свежемолотый чёрный перец
+- укроп
+- по желанию — немного уксуса или горчицы
+
+## Как приготовить
+
+1. **Замеси тесто.** Смешай муку и соль, добавь яйцо, воду и масло. Вымешивай 7–10 минут, пока тесто не станет гладким и упругим.
+2. **Дай тесту отдохнуть.** Накрой его и оставь на 30 минут.
+3. **Сделай начинку.** Пропусти мясо и лук через мясорубку. Добавь соль, перец и ледяную воду. Хорошо вымешай — начинка должна стать сочной и однородной.
+4. **Сформируй пельмени.** Раскатай тесто тонко, вырежи кружки, положи примерно по чайной ложке начинки, сложи пополам и защипни края.
+5. **Вари.** Опусти пельмени в кипящую подсоленную воду. После всплытия вари ещё примерно 4–5 минут.
+6. **Подавай сразу.** Добавь сливочное масло, сметану, укроп и чёрный перец.
+
+### Главный секрет
+Не жалей лука и ледяной воды в начинке: именно они помогают сделать мясо сочным. А после замеса обязательно дай тесту отдохнуть — тогда его будет намного легче раскатывать.
+
+Приятного аппетита! ❤️
