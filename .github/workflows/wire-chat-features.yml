@@ -23,10 +23,7 @@ jobs:
           from pathlib import Path
           p = Path('app/src/main/kotlin/com/privatemessenger/app/NexoActivity.kt')
           s = p.read_text()
-          marker = 'NexoFeatureModule.install(this, conversationId, view)'
-          if marker in s:
-              print('Already wired')
-              raise SystemExit(0)
+          marker = '        NexoFeatureModule.install(this, conversationId, view)'
           start = s.index('    private fun openChat(conversationId: String, username: String)')
           brace = s.index('{', start)
           depth = 0
@@ -40,15 +37,23 @@ jobs:
                       end = i
                       break
               i += 1
-          if end is None:
-              raise SystemExit('openChat body not found')
+          if end is None: raise SystemExit('openChat body not found')
           body = s[brace:end]
-          needle = '        applyInsets(view)'
+          body = body.replace('\n' + marker, '')
+          needle = '        send.setOnClickListener {'
           pos = body.find(needle)
-          if pos < 0:
-              raise SystemExit('applyInsets(view) inside openChat not found')
-          pos += len(needle)
-          body = body[:pos] + '\n        ' + marker + body[pos:]
+          if pos < 0: raise SystemExit('send listener not found')
+          i = body.index('{', pos)
+          depth = 0
+          while i < len(body):
+              if body[i] == '{': depth += 1
+              elif body[i] == '}':
+                  depth -= 1
+                  if depth == 0:
+                      i += 1
+                      break
+              i += 1
+          body = body[:i] + '\n\n' + marker + body[i:]
           p.write_text(s[:brace] + body + s[end:])
           PY
 
