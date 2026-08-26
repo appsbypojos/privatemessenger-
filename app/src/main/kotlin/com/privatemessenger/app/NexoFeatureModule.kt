@@ -2,7 +2,6 @@ package com.privatemessenger.app
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
@@ -10,17 +9,16 @@ import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.json.JSONObject
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
+import org.json.JSONObject
 
 /** Adds real chat actions without replacing the existing chat screen. */
 object NexoFeatureModule {
-    private const val ATTACH_REQ = 7101
-    private const val CALL_REQ = 7102
     private val http = OkHttpClient()
 
     fun install(activity: Activity, conversationId: String, root: ViewGroup) {
@@ -40,7 +38,7 @@ object NexoFeatureModule {
             requestCall(activity, conversationId, "audio")
         }
         buttons.firstOrNull { sameIcon(activity, it, R.drawable.ic_more) }?.setOnClickListener {
-            Toast.makeText(activity, "Звонок, вложения и голосовые сообщения доступны", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, "Вложения и голосовые сообщения доступны", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -59,7 +57,7 @@ object NexoFeatureModule {
         val uid = SupabaseClient.userId ?: return
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val other = with(Dispatchers.IO) {
+                val other = withContext(Dispatchers.IO) {
                     val base = BuildConfig.SUPABASE_URL.trimEnd('/')
                     val key = BuildConfig.SUPABASE_KEY.trim()
                     val req = Request.Builder()
@@ -74,7 +72,7 @@ object NexoFeatureModule {
                         arr.getJSONObject(0).getString("user_id")
                     }
                 }
-                with(Dispatchers.IO) {
+                withContext(Dispatchers.IO) {
                     val base = BuildConfig.SUPABASE_URL.trimEnd('/')
                     val key = BuildConfig.SUPABASE_KEY.trim()
                     val body = JSONObject()
