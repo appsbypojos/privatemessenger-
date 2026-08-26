@@ -644,6 +644,7 @@ class NexoActivity : AppCompatActivity() {
 
 
 
+
         scope.launch {
             try {
                 refreshMessages(conversationId, true)
