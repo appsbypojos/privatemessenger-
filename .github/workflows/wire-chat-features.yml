@@ -1,0 +1,65 @@
+name: Wire chat features
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    if: ${{ !contains(github.event.head_commit.message, 'wire chat features') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Inject feature module into chat
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/src/main/kotlin/com/privatemessenger/app/NexoActivity.kt')
+          s = p.read_text()
+          marker = 'NexoFeatureModule.install(this, conversationId, view)'
+          if marker in s:
+              print('Already wired')
+              raise SystemExit(0)
+          start = s.index('    private fun openChat(conversationId: String, username: String)')
+          brace = s.index('{', start)
+          depth = 0
+          i = brace
+          end = None
+          while i < len(s):
+              if s[i] == '{': depth += 1
+              elif s[i] == '}':
+                  depth -= 1
+                  if depth == 0:
+                      end = i
+                      break
+              i += 1
+          if end is None:
+              raise SystemExit('openChat body not found')
+          body = s[brace:end]
+          needle = '        applyInsets(view)'
+          pos = body.find(needle)
+          if pos < 0:
+              raise SystemExit('applyInsets(view) inside openChat not found')
+          pos += len(needle)
+          body = body[:pos] + '\n        ' + marker + body[pos:]
+          p.write_text(s[:brace] + body + s[end:])
+          PY
+
+      - name: Commit wiring change
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/kotlin/com/privatemessenger/app/NexoActivity.kt
+          if git diff --cached --quiet; then
+            echo 'No changes'
+            exit 0
+          fi
+          git commit -m 'ci: wire chat feature actions into NexoActivity'
+          git push origin HEAD:main
