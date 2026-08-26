@@ -641,6 +641,7 @@ class NexoActivity : AppCompatActivity() {
         NexoFeatureModule.install(this, conversationId, view)
 
 
+
         scope.launch {
             try {
                 refreshMessages(conversationId, true)
