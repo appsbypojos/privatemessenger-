@@ -3,5 +3,9 @@
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">@android:color/white</item>
+        <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowEnterAnimation">@anim/nexo_enter</item>
+        <item name="android:windowExitAnimation">@anim/nexo_exit</item>
+        <item name="android:windowDisablePreview">true</item>
     </style>
 </resources>
