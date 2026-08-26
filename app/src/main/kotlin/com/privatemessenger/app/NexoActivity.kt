@@ -615,6 +615,7 @@ class NexoActivity : AppCompatActivity() {
 
         setContentView(view)
         applyInsets(view)
+        NexoFeatureModule.install(this, conversationId, view)
 
         back.setOnClickListener { pollJob?.cancel(); currentChat = null; showTab(1) }
         call.setOnClickListener { toast("Звонки скоро") }
